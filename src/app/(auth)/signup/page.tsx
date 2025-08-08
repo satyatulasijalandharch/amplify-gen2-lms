@@ -1,5 +1,5 @@
-import SignUpForm from "../_components/SignupForm";
+import { Signup } from "../_components/Signup";
 
 export default async function SignUpPage() {
-  return <SignUpForm />;
+  return <Signup />;
 }

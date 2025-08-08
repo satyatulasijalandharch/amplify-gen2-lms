@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 
-export function LoginForm() {
+export function Login() {
   const [emailPending, startEmailTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +50,7 @@ export function LoginForm() {
           router.refresh();
         } else if (nextStep) {
           switch (nextStep.signInStep) {
-            case "CONFIRM_SIGN_UP":
+            case "CONFIRM_SIGN_IN_WITH_EMAIL_CODE":
               toast.info("Please verify your email address.");
               router.push(`/verify-request?email=${encodeURIComponent(email)}`);
               break;

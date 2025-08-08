@@ -1,7 +1,9 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/themeToggle";
+import { Badge } from "@/components/ui/badge";
+import { Mail, User, Shield } from "lucide-react";
+import Link from "next/link";
+import Logout from "./Logout";
 import {
   Card,
   CardContent,
@@ -9,92 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut, fetchUserAttributes } from "aws-amplify/auth";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useAuthenticator } from "@aws-amplify/ui-react";
-import { useEffect, useState } from "react";
-import { LogOut, Mail, User, Shield, Calendar } from "lucide-react";
+import {
+  AuthGetCurrentUserServer,
+  getUserAttributes,
+  isUserAuthenticatedServer,
+} from "@/utils/amplify-utils";
 
-interface UserAttributes {
-  email?: string;
-  name?: string;
-  fullname?: string;
-  profilePicture?: string;
-  email_verified?: string;
-  [key: string]: string | undefined;
-}
-
-export default function Home() {
-  const router = useRouter();
-  const { user, authStatus } = useAuthenticator((context) => [
-    context.user,
-    context.authStatus,
-  ]);
-  const [userAttributes, setUserAttributes] = useState<UserAttributes | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (authStatus === "authenticated" && user) {
-      fetchUserDetails();
-    } else {
-      setLoading(false);
-    }
-  }, [authStatus, user]);
-
-  async function fetchUserDetails() {
-    try {
-      const attributes = await fetchUserAttributes();
-      setUserAttributes(attributes);
-    } catch (error) {
-      console.error("Error fetching user attributes:", error);
-      toast.error("Failed to load user details");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSignOut() {
-    try {
-      await signOut();
-      router.push("/login");
-      toast.success("You have been signed out successfully.");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Error signing out. Please try again.");
-    }
-  }
-
-  function getInitials(name: string = "") {
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
-  function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
-  }
+export default async function Home() {
+  const isAuthenticated = await isUserAuthenticatedServer();
+  const userAttributes = isAuthenticated ? await getUserAttributes() : {};
+  const user = isAuthenticated ? await AuthGetCurrentUserServer() : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -110,22 +36,11 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            {authStatus === "authenticated" && (
-              <Button
-                type="button"
-                onClick={handleSignOut}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </Button>
-            )}
+            {isAuthenticated && <Logout />}
           </div>
         </div>
 
-        {authStatus === "authenticated" && user && userAttributes ? (
+        {isAuthenticated && user && userAttributes ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* User Profile Card */}
             <Card className="md:col-span-2">
@@ -140,16 +55,6 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-start gap-4">
-                  <Avatar className="size-16">
-                    <AvatarImage src={userAttributes.profilePicture} />
-                    <AvatarFallback className="text-lg">
-                      {getInitials(
-                        userAttributes.name ||
-                          userAttributes.fullname ||
-                          userAttributes.email
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
                   <div className="flex-1">
                     <div className="grid gap-3">
                       <div>
@@ -194,55 +99,6 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Account Status Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="size-5" />
-                  Account Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Status
-                    </label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="size-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Active</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Account Type
-                    </label>
-                    <p className="text-sm mt-1">Standard User</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Session
-                    </label>
-                    <p className="text-sm mt-1">Currently signed in</p>
-                  </div>
-                  {user.signInDetails?.loginId && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">
-                        Last Sign In
-                      </label>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Calendar className="size-3 text-muted-foreground" />
-                        <p className="text-xs">
-                          {formatDate(new Date().toISOString())}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Quick Actions Card */}
             <Card className="md:col-span-2 lg:col-span-3">
               <CardHeader>
@@ -302,13 +158,11 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <Button
-                type="button"
-                onClick={() => router.push("/login")}
-                className="w-full"
-              >
-                Sign in
-              </Button>
+              <Link href="/login" className="w-full" passHref>
+                <Button type="button" className="w-full">
+                  Sign in
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}

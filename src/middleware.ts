@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchAuthSession } from "aws-amplify/auth/server";
 import { runWithAmplifyServerContext } from "@/utils/amplify-utils";
 
-const publicRoutes = ["/login", "/signup", "/verify-request", "/set-new-password", "/forgot-password", "/reset-password"];
+const publicRoutes = [
+    "/login",
+    "/signup",
+    "/verify-request",
+    "/set-new-password",
+    "/forgot-password",
+    "/reset-password"
+];
 
 export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
@@ -20,12 +27,14 @@ export async function middleware(request: NextRequest) {
         },
     });
 
-    const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
+    const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/"));
 
+    // Redirect authenticated users away from public auth pages
     if (isAuthenticated && isPublicRoute) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 
+    // Redirect unauthenticated users away from protected pages
     if (!isAuthenticated && !isPublicRoute) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -35,14 +44,11 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - login, signup, verify-request, set-new-password, forgot-password, reset-password (auth routes)
-         */
-        "/((?!api|_next/static|_next/image|favicon.ico|login|signup|verify-request|set-new-password|forgot-password|reset-password).*)",
+        // Match all request paths except for the ones starting with:
+        // - api (API routes)
+        // - _next/static (static files)
+        // - _next/image (image optimization files)
+        // - favicon.ico (favicon file)
+        "/((?!api|_next/static|_next/image|favicon.ico).*)",
     ],
 };

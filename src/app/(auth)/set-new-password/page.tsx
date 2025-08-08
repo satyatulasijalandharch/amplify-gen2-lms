@@ -1,5 +1,10 @@
-import NewPasswordForm from "../_components/NewPassword";
+import { Suspense } from "react";
+import { NewPassword } from "../_components/NewPassword";
 
 export default function CreateNewPasswordPage() {
-  return <NewPasswordForm />;
+  return (
+    <Suspense>
+      <NewPassword />
+    </Suspense>
+  );
 }

@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function SignUpForm() {
+export function Signup() {
   const [emailPending, startEmailTransition] = useTransition();
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
@@ -61,6 +61,9 @@ export default function SignUpForm() {
             userAttributes: {
               email: email,
               name: fullname,
+            },
+            autoSignIn: {
+              enabled: true,
             },
           },
         });

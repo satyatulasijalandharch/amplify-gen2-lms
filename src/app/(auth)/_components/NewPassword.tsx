@@ -11,16 +11,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { confirmSignIn } from "aws-amplify/auth";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function NewPasswordForm() {
+export function NewPassword() {
   const [isPending, startTransition] = useTransition();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
+  const params = useSearchParams();
+  const email = params.get("email") as string;
+
+  useEffect(() => {
+    if (!email) {
+      router.replace("/signup");
+    }
+  }, [email, router]);
 
   function setPassword() {
     if (!newPassword || !confirmPassword) {

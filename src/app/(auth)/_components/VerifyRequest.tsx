@@ -13,28 +13,27 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { confirmSignUp, resendSignUpCode } from "aws-amplify/auth";
+import { confirmSignUp, resendSignUpCode, autoSignIn } from "aws-amplify/auth";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
 
-export default function VerifyForm() {
+export function VerifyRequest() {
   const [otp, setOtp] = useState("");
   const [isPending, startTransition] = useTransition();
   const [isResending, startResendTransition] = useTransition();
   const [resendCountdown, setResendCountdown] = useState(0);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams?.get("email") || "";
+  const params = useSearchParams();
+  const email = params.get("email") as string;
 
   useEffect(() => {
     if (!email) {
-      router.replace("/signup");
+      router.push("/signup");
     }
   }, [email, router]);
 
-  // Countdown timer effect
   useEffect(() => {
     if (resendCountdown > 0) {
       const timer = setTimeout(() => {
@@ -55,10 +54,18 @@ export default function VerifyForm() {
         toast.success("Verification code resent to your email.");
         setResendCountdown(30);
       } catch (error: unknown) {
+        console.error("Resend code error:", error);
         const authError = error as { name?: string; message?: string };
         switch (authError.name) {
           case "LimitExceededException":
             toast.error("Too many requests. Please try again later.");
+            break;
+          case "UserNotFoundException":
+            toast.error("User not found. Please try signing up again.");
+            router.push("/signup");
+            break;
+          case "InvalidParameterException":
+            toast.error("Invalid request. Please try signing up again.");
             break;
           default:
             toast.error("Failed to resend code. Please try again.");
@@ -75,10 +82,45 @@ export default function VerifyForm() {
 
     startTransition(async () => {
       try {
-        await confirmSignUp({ username: email, confirmationCode: otp });
-        toast.success("Email verified successfully!");
-        router.push("/login");
+        const { nextStep } = await confirmSignUp({
+          username: email,
+          confirmationCode: otp,
+        });
+
+        if (nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN") {
+          try {
+            // Add a small delay to ensure backend processing is complete
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // Call autoSignIn to complete the flow
+            const signInResult = await autoSignIn();
+
+            console.log("Auto sign-in result:", signInResult);
+
+            if (signInResult.isSignedIn) {
+              toast.success("Email verified and signed in successfully!");
+              // Force a page refresh to update auth state
+              window.location.href = "/";
+            } else {
+              console.log("Auto sign-in completed but user not signed in");
+              toast.success("Email verified successfully! Please sign in.");
+              router.push("/login");
+            }
+          } catch (autoSignInError) {
+            console.error("Auto sign-in error:", autoSignInError);
+            toast.success("Email verified successfully! Please sign in.");
+            router.push("/login");
+          }
+        } else if (nextStep.signUpStep === "DONE") {
+          toast.success("Email verified successfully!");
+          router.push("/login");
+        } else {
+          console.log("Unexpected next step:", nextStep);
+          toast.success("Email verified successfully!");
+          router.push("/login");
+        }
       } catch (error: unknown) {
+        console.error("Verification error:", error);
         const authError = error as { name?: string; message?: string };
         switch (authError.name) {
           case "CodeMismatchException":
@@ -88,6 +130,12 @@ export default function VerifyForm() {
             toast.error(
               "Verification code has expired. Please request a new one."
             );
+            break;
+          case "NotAuthorizedException":
+            toast.error("User is not authorized. Please try signing up again.");
+            break;
+          case "UserNotFoundException":
+            toast.error("User not found. Please try signing up again.");
             break;
           default:
             toast.error("Failed to verify code. Please try again.");

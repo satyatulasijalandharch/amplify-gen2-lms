@@ -1,5 +1,10 @@
-import ResetPasswordForm from "../_components/ResetPassword";
+import { Suspense } from "react";
+import { ResetPassword } from "../_components/ResetPassword";
 
-export default function ResetPasswordPage() {
-  return <ResetPasswordForm />;
+export default async function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPassword />
+    </Suspense>
+  );
 }

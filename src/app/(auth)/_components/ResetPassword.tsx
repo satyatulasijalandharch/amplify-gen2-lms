@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock, RefreshCw } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { useState, useTransition, useEffect } from "react";
-import { resetPassword, confirmResetPassword } from "aws-amplify/auth";
+import { confirmResetPassword } from "aws-amplify/auth";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -21,59 +21,20 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-export default function ResetPasswordForm() {
+export function ResetPassword() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [resendCountdown, setResendCountdown] = useState(0);
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isResending, startResendTransition] = useTransition();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const params = useSearchParams();
+  const email = params.get("email") as string;
 
-  // Countdown timer effect
-  useEffect(() => {
-    if (resendCountdown > 0) {
-      const timer = setTimeout(() => {
-        setResendCountdown(resendCountdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendCountdown]);
-
-  // Redirect if no email provided
   useEffect(() => {
     if (!email) {
-      toast.error(
-        "No email provided. Please start the password reset process again."
-      );
       router.push("/forgot-password");
     }
   }, [email, router]);
-
-  function resendCode() {
-    if (resendCountdown > 0) {
-      return;
-    }
-
-    startResendTransition(async () => {
-      try {
-        await resetPassword({ username: email });
-        toast.success("Password reset code resent to your email.");
-        setResendCountdown(30);
-      } catch (error: unknown) {
-        const authError = error as { name?: string; message?: string };
-        switch (authError.name) {
-          case "LimitExceededException":
-            toast.error("Too many requests. Please try again later.");
-            break;
-          default:
-            toast.error("Failed to resend code. Please try again.");
-        }
-      }
-    });
-  }
 
   function setPassword() {
     if (!otp || otp.length !== 6) {
@@ -192,33 +153,6 @@ export default function ResetPasswordForm() {
               <>
                 <Lock className="size-4" />
                 <span>Set New Password</span>
-              </>
-            )}
-          </Button>
-        </div>
-        {/* Resend Code Section */}
-        <div className="flex flex-col items-center space-y-2 pt-4 border-t">
-          <p className="text-sm text-muted-foreground">
-            Didn&apos;t receive the code?
-          </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={resendCode}
-            disabled={isResending || resendCountdown > 0}
-            className="text-primary hover:text-primary/80"
-          >
-            {isResending ? (
-              <>
-                <Loader2 className="size-4 animate-spin mr-2" />
-                Sending...
-              </>
-            ) : resendCountdown > 0 ? (
-              `Resend code (${resendCountdown}s)`
-            ) : (
-              <>
-                <RefreshCw className="size-4 mr-2" />
-                Resend code
               </>
             )}
           </Button>

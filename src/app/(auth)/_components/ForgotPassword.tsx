@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 
-export function ForgotPasswordForm() {
+export function ForgotPassword() {
   const [emailPending, startEmailTransition] = useTransition();
   const [email, setEmail] = useState("");
   const router = useRouter();
