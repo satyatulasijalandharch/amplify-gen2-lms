@@ -1,0 +1,111 @@
+import { NextRequest, NextResponse } from "next/server";
+import { fetchAuthSession } from "aws-amplify/auth/server";
+import { runWithAmplifyServerContext } from "@/utils/amplify-utils";
+
+const publicRoutes = [
+    "/login",
+    "/signup",
+    "/verify-request",
+    "/set-new-password",
+    "/forgot-password",
+    "/reset-password"
+];
+
+export async function middleware(request: NextRequest) {
+    const response = NextResponse.next();
+
+    // Enhanced authentication check with error handling
+    const authResult = await runWithAmplifyServerContext({
+        nextServerContext: { request, response },
+        operation: async (contextSpec) => {
+            try {
+                // Force refresh tokens to validate against server
+                const session = await fetchAuthSession(contextSpec, { forceRefresh: true });
+
+                // Check if tokens exist and are not expired
+                if (!session.tokens) {
+                    return { isAuthenticated: false, reason: 'No tokens' };
+                }
+
+                const accessToken = session.tokens.accessToken;
+                if (accessToken) {
+                    const now = Math.floor(Date.now() / 1000);
+                    // Check token expiration
+                    if (accessToken.payload.exp && accessToken.payload.exp < now) {
+                        return { isAuthenticated: false, reason: 'Token expired' };
+                    }
+                }
+
+                return { isAuthenticated: true, session };
+            } catch (error: unknown) {
+                const authError = error as { name?: string; message?: string };
+                console.log("Auth middleware error:", authError);
+
+                // Handle specific auth errors that indicate invalid user state
+                if (authError?.name === 'UserNotFoundException' ||
+                    authError?.name === 'NotAuthorizedException' ||
+                    authError?.name === 'TokenExpiredException' ||
+                    authError?.name === 'UserNotConfirmedException') {
+                    // Clear cookies for invalid users
+                    const logoutResponse = NextResponse.redirect(new URL("/login", request.url));
+                    logoutResponse.cookies.delete('amplify-signin-with-hostedUI');
+
+                    // Clear Cognito cookies
+                    request.cookies.getAll().forEach(cookie => {
+                        if (cookie.name.includes('CognitoIdentityServiceProvider')) {
+                            logoutResponse.cookies.delete(cookie.name);
+                        }
+                    });
+
+                    return { isAuthenticated: false, reason: 'Invalid user state', redirect: logoutResponse };
+                }
+
+                return { isAuthenticated: false, reason: authError?.message || 'Auth error' };
+            }
+        },
+    });
+
+    const isPublicRoute = publicRoutes.some((route) =>
+        request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
+    );
+
+    // If there's a specific redirect response, return it
+    if (authResult.redirect) {
+        return authResult.redirect;
+    }
+
+    // Redirect authenticated users away from public auth pages
+    if (authResult.isAuthenticated && isPublicRoute) {
+        return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    // Redirect unauthenticated users away from protected pages
+    if (!authResult.isAuthenticated && !isPublicRoute) {
+        // const loginResponse = NextResponse.redirect(new URL("/login", request.url));
+
+        // Clear any remaining auth cookies on redirect to login
+        // if (authResult.reason?.includes('Invalid user state') || authResult.reason?.includes('Token expired')) {
+        //     request.cookies.getAll().forEach(cookie => {
+        //         if (cookie.name.includes('CognitoIdentityServiceProvider') ||
+        //             cookie.name.includes('amplify')) {
+        //             loginResponse.cookies.delete(cookie.name);
+        //         }
+        //     });
+        // }
+
+        // return loginResponse;
+    }
+
+    return response;
+}
+
+export const config = {
+    matcher: [
+        // Match all request paths except for the ones starting with:
+        // - api (API routes)
+        // - _next/static (static files)
+        // - _next/image (image optimization files)
+        // - favicon.ico (favicon file)
+        "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    ],
+};
