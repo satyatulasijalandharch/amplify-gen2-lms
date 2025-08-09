@@ -16,9 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "aws-amplify/auth";
 import Link from "next/link";
-import { toast } from "sonner";
+import { useSignOut } from "@/hooks/use-signout";
 
 interface iAppProps {
   name: string;
@@ -27,10 +26,7 @@ interface iAppProps {
 }
 
 export function UserDropdown({ name, email, image }: iAppProps) {
-  const handleLogout = async () => {
-    await signOut({ global: true });
-    toast.success("Signed out successfully");
-  };
+  const { handleSignOut } = useSignOut();
 
   return (
     <DropdownMenu>
@@ -78,7 +74,7 @@ export function UserDropdown({ name, email, image }: iAppProps) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={handleSignOut}>
           <LogOut size={16} className="opacity-60" aria-hidden="true" />
           <span>Logout</span>
         </DropdownMenuItem>
