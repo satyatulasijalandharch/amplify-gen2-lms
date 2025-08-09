@@ -75,7 +75,11 @@ export function Navbar() {
 
             {isPending ? null : authStatus === "authenticated" ? (
               <UserDropdown
-                name={attributes?.fullName || ""}
+                name={
+                  attributes?.fullName && attributes?.fullName.length > 0
+                    ? attributes.fullName
+                    : attributes?.email?.split("@")[0] || ""
+                }
                 email={attributes?.email || ""}
                 image={attributes?.picture || ""}
               />
