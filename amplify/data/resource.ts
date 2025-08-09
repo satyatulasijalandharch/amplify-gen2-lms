@@ -1,23 +1,28 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { postConfirmation } from '../auth/post-confirmation/resource';
 
 const CourseLevel = a.enum(['Beginner', 'Intermediate', 'Advanced']);
 const CourseStatus = a.enum(['Draft', 'Published', 'Archived']);
 
 const schema = a.schema({
-  // User model
-  User: a.model({
-    userId: a.id(),
+  // UserProfile model
+  UserProfile: a.model({
+    userId: a.id().required().authorization(allow => [allow.ownerDefinedIn('userId').to(['read'])]),
     name: a.string(),
     email: a.email(),
-    emailVerified: a.boolean(),
     image: a.string(),
     courses: a.hasMany('Course', 'userId'),
-  }).authorization(allow => [allow.owner()]),
+  }).identifier(['userId'])
+    .authorization(allow => [allow.ownerDefinedIn('userId')]),
+
 
   // Course model
-
   Course: a.model({
-    courseId: a.id(),
+    courseId: a.id().authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.ownerDefinedIn('userId')
+    ]),
     title: a.string(),
     description: a.string(),
     fileKey: a.string(),
@@ -28,14 +33,16 @@ const schema = a.schema({
     smallDescription: a.string(),
     slug: a.string(),
     status: CourseStatus,
-    userId: a.id(),
-    user: a.belongsTo('User', 'userId'),
+    userId: a.id().authorization(allow => [allow.ownerDefinedIn('userId').to(['read'])]),
+    user: a.belongsTo('UserProfile', 'userId'),
 
-  }).authorization(allow => [
-    allow.guest().to(['read']),
-    allow.owner()
-  ]),
-});
+  }).identifier(['courseId'])
+    .authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.ownerDefinedIn('userId')
+    ]),
+}).authorization((allow) => [allow.resource(postConfirmation)]);
 
 
 
