@@ -7,9 +7,8 @@ import Logo from "@/public/logo.png";
 import { ThemeToggle } from "@/components/ui/themeToggle";
 import { buttonVariants } from "@/components/ui/button";
 import { UserDropdown } from "./UserDropdown";
-import { useAuthenticator } from "@aws-amplify/ui-react";
+import useAuthUser from "@/hooks/use-auth-user";
 import { useEffect, useState } from "react";
-import { fetchUserAttributes } from "aws-amplify/auth";
 
 const navigationItems = [
   {
@@ -27,28 +26,14 @@ const navigationItems = [
 ];
 
 export function Navbar() {
-  const { authStatus, isPending } = useAuthenticator();
-  const [attributes, setAttributes] = useState<{
-    fullName?: string;
-    email?: string;
-    picture?: string;
-  } | null>(null);
+  const user = useAuthUser();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (authStatus === "authenticated") {
-      fetchUserAttributes()
-        .then((attrs) => {
-          setAttributes({
-            fullName: attrs.name,
-            email: attrs.email,
-            picture: attrs.picture,
-          });
-        })
-        .catch(() => setAttributes(null));
-    } else {
-      setAttributes(null);
+    if (user !== undefined) {
+      setIsLoading(false);
     }
-  }, [authStatus]);
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-[backdrop-filter]:bg-background/60">
@@ -72,16 +57,15 @@ export function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-
-            {isPending ? null : authStatus === "authenticated" ? (
+            {isLoading ? null : user ? (
               <UserDropdown
                 name={
-                  attributes?.fullName && attributes?.fullName.length > 0
-                    ? attributes.fullName
-                    : attributes?.email?.split("@")[0] || ""
+                  user?.name && user?.name.length > 0
+                    ? user.name
+                    : user?.email?.split("@")[0] || ""
                 }
-                email={attributes?.email || ""}
-                image={attributes?.picture || ""}
+                email={user?.email || ""}
+                image={user?.picture || ""}
               />
             ) : (
               <>

@@ -7,21 +7,21 @@ const CourseStatus = a.enum(['Draft', 'Published', 'Archived']);
 const schema = a.schema({
   // UserProfile model
   UserProfile: a.model({
-    userId: a.id().required().authorization(allow => [allow.ownerDefinedIn('userId').to(['read'])]),
+    id: a.id().required().authorization(allow => [allow.ownerDefinedIn('id').to(['read'])]),
     name: a.string(),
     email: a.email(),
     image: a.string(),
-    courses: a.hasMany('Course', 'userId'),
-  }).identifier(['userId'])
-    .authorization(allow => [allow.ownerDefinedIn('userId')]),
+    courses: a.hasMany('Course', 'id'),
+  }).identifier(['id'])
+    .authorization(allow => [allow.ownerDefinedIn('id')]),
 
 
   // Course model
   Course: a.model({
-    courseId: a.id().authorization(allow => [
+    id: a.id().authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
-      allow.ownerDefinedIn('userId')
+      allow.ownerDefinedIn('id')
     ]),
     title: a.string(),
     description: a.string(),
@@ -33,14 +33,13 @@ const schema = a.schema({
     smallDescription: a.string(),
     slug: a.string(),
     status: CourseStatus,
-    userId: a.id().authorization(allow => [allow.ownerDefinedIn('userId').to(['read'])]),
-    user: a.belongsTo('UserProfile', 'userId'),
+    users: a.belongsTo('UserProfile', 'id'),
 
-  }).identifier(['courseId'])
+  }).identifier(['id'])
     .authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
-      allow.ownerDefinedIn('userId')
+      allow.ownerDefinedIn('id')
     ]),
 }).authorization((allow) => [allow.resource(postConfirmation)]);
 
