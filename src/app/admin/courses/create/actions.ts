@@ -36,3 +36,15 @@ export async function createCourseAction(values: courseSchemaType): Promise<ApiR
         };
     }
 }
+
+// export async function getCoursesAction(): Promise<ApiResponse> {
+//     try {
+//         const {data: courses} = await cookiesClient.models.Course.list();
+        
+//     } catch {
+//         return {
+//             status: "error",
+//             message: "Failed to retrieve courses"
+//         };
+//     }
+// }
