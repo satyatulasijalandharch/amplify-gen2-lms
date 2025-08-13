@@ -15,7 +15,7 @@ import {
   courseSchemaType,
   courseStatus,
 } from "@/lib/zodSchemas";
-import { ArrowLeft, PlusIcon, SparkleIcon } from "lucide-react";
+import { ArrowLeft, Loader2, PlusIcon, SparkleIcon } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,8 +38,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/rich-text-editor/Editor";
+import CustomFileUploader from "@/components/FileUploader";
+import { createCourseAction } from "./actions";
+import { useTransition } from "react";
+import { tryCatch } from "@/hooks/try-catch";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function CourseCreatePage() {
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<courseSchemaType>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -56,7 +64,25 @@ export default function CourseCreatePage() {
     },
   });
 
-  function onSubmit(values: courseSchemaType) {}
+  async function onSubmit(values: courseSchemaType) {
+    startTransition(async () => {
+      const { data: result, error } = await tryCatch(
+        createCourseAction(values)
+      );
+
+      if (error) {
+        toast.error("An unexpected error occurred");
+        return;
+      }
+      if (result.status === "success") {
+        toast.success(result.message);
+        form.reset();
+        router.push("/admin/courses");
+      } else if (result.status === "error") {
+        toast.error(result.message);
+      }
+    });
+  }
   return (
     <>
       <div className="flex items-center gap-4">
@@ -152,17 +178,22 @@ export default function CourseCreatePage() {
               <FormField
                 control={form.control}
                 name="fileKey"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
-                    <FormLabel>File Key</FormLabel>
+                    <FormLabel>Course Thumbnail</FormLabel>
                     <FormControl>
-                      <Input placeholder="Thumbnail url" {...field} />
+                      <CustomFileUploader
+                        onUploadSuccess={({ key }) => {
+                          form.setValue("fileKey", key ?? "", {
+                            shouldValidate: true,
+                          });
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -282,8 +313,17 @@ export default function CourseCreatePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit">
-                Create Course <PlusIcon className="ml-1" size={16} />
+              <Button type="submit" disabled={pending}>
+                {pending ? (
+                  <>
+                    Creating...
+                    <Loader2 className="animate-spin ml-1" />
+                  </>
+                ) : (
+                  <>
+                    Create Course <PlusIcon className="ml-1" size={16} />
+                  </>
+                )}
               </Button>
             </form>
           </Form>
