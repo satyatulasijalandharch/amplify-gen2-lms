@@ -1,9 +1,6 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 
-const CourseLevel = a.enum(['Beginner', 'Intermediate', 'Advanced']);
-const CourseStatus = a.enum(['Draft', 'Published', 'Archived']);
-
 const schema = a.schema({
   // UserProfile model
   UserProfile: a.model({
@@ -28,11 +25,11 @@ const schema = a.schema({
     fileKey: a.string(),
     price: a.integer(),
     duration: a.integer(),
-    level: CourseLevel,
+    level: a.ref("CourseLevel"),
     category: a.string(),
     smallDescription: a.string(),
     slug: a.string(),
-    status: CourseStatus,
+    status: a.ref("CourseStatus"),
     users: a.belongsTo('UserProfile', 'id'),
 
   }).identifier(['id'])
@@ -41,6 +38,10 @@ const schema = a.schema({
       allow.authenticated().to(['read']),
       allow.ownerDefinedIn('id')
     ]),
+
+  CourseStatus: a.enum(['Draft', 'Published', 'Archived']),
+  CourseLevel: a.enum(['Beginner', 'Intermediate', 'Advanced'])
+
 }).authorization((allow) => [allow.resource(postConfirmation)]);
 
 
