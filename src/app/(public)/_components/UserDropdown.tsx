@@ -1,5 +1,4 @@
 import {
-  ChevronDown,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -39,7 +38,6 @@ export function UserDropdown({ name, email, image }: iAppProps) {
             />
             <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <ChevronDown size={16} className="opacity-60" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">

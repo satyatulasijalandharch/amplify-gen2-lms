@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { UserDropdown } from "./UserDropdown";
 import useAuthUser from "@/hooks/use-auth-user";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navigationItems = [
   {
@@ -57,7 +58,9 @@ export function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            {isLoading ? null : user ? (
+            {isLoading ? (
+              <Skeleton className="w-8 h-8 rounded-full" />
+            ) : user ? (
               <UserDropdown
                 name={
                   user?.name && user?.name.length > 0
