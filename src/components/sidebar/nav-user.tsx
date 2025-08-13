@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  IconDashboard,
-  IconDotsVertical,
-  IconLogout,
-} from "@tabler/icons-react";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -22,78 +15,69 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuthenticator } from "@aws-amplify/ui-react";
+import { IconDashboard, IconLogout } from "@tabler/icons-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
-import { fetchUserAttributes } from "aws-amplify/auth";
+import useAuthUser from "@/hooks/use-auth-user";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { HomeIcon, Tv2 } from "lucide-react";
 import { useSignOut } from "@/hooks/use-signout";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { authStatus, isPending } = useAuthenticator();
   const { handleSignOut } = useSignOut();
-  const [attributes, setAttributes] = useState<{
-    fullName?: string;
-    email?: string;
-    picture?: string;
-  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthUser();
 
   useEffect(() => {
-    if (authStatus === "authenticated") {
-      fetchUserAttributes()
-        .then((attrs) => {
-          setAttributes({
-            fullName: attrs.name,
-            email: attrs.email,
-            picture: attrs.picture,
-          });
-        })
-        .catch(() => setAttributes(null));
-    } else {
-      setAttributes(null);
+    if (user !== undefined) {
+      setIsLoading(false);
     }
-  }, [authStatus]);
-
-  if (isPending) {
-    return null;
-  }
+  }, [user]);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage
-                  src={
-                    attributes?.picture ??
-                    `https://avatar.vercel.sh/${attributes?.email}`
-                  }
-                  alt={attributes?.fullName}
-                />
-                <AvatarFallback className="rounded-lg">
-                  {attributes?.fullName && attributes?.fullName.length > 0
-                    ? attributes?.fullName.charAt(0).toUpperCase()
-                    : attributes?.email?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {attributes?.fullName && attributes?.fullName.length > 0
-                    ? attributes?.fullName
-                    : attributes?.email?.split("@")[0]}
-                </span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {attributes?.email}
-                </span>
-              </div>
-              <IconDotsVertical className="ml-auto size-4" />
-            </SidebarMenuButton>
+            {isLoading ? (
+              <SidebarMenuButton
+                size="lg"
+                className="flex items-center space-x-3 cursor-default"
+                disabled
+              >
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                <div className="grid flex-1 text-left text-sm leading-tight gap-1">
+                  <Skeleton className="h-5 w-30 rounded" />
+                  <Skeleton className="h-4 w-45 rounded" />
+                </div>
+              </SidebarMenuButton>
+            ) : (
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage
+                    src={
+                      user?.picture ?? `https://avatar.vercel.sh/${user?.email}`
+                    }
+                    alt={user?.name}
+                  />
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">
+                    {user?.name && user?.name.length > 0
+                      ? user?.name
+                      : user?.email?.split("@")[0]}
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {user?.email}
+                  </span>
+                </div>
+              </SidebarMenuButton>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -106,25 +90,19 @@ export function NavUser() {
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
                     src={
-                      attributes?.picture ??
-                      `https://avatar.vercel.sh/${attributes?.email}`
+                      user?.picture ?? `https://avatar.vercel.sh/${user?.email}`
                     }
-                    alt={attributes?.fullName}
+                    alt={user?.name}
                   />
-                  <AvatarFallback className="rounded-lg">
-                    {attributes?.fullName && attributes?.fullName.length > 0
-                      ? attributes?.fullName.charAt(0).toUpperCase()
-                      : attributes?.email?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {attributes?.fullName && attributes?.fullName.length > 0
-                      ? attributes?.fullName
-                      : attributes?.email?.split("@")[0]}
+                    {user?.name && user?.name.length > 0
+                      ? user?.name
+                      : user?.email?.split("@")[0]}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {attributes?.email}
+                    {user?.email}
                   </span>
                 </div>
               </div>
