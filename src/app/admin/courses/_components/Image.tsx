@@ -13,12 +13,23 @@ interface ImageComponentProps {
   className?: string;
 }
 
-const ImageComponent = ({ path, altText, width, height, className }: ImageComponentProps) => {
+const ImageComponent = ({
+  path,
+  altText,
+  width,
+  height,
+  className,
+}: ImageComponentProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    getUrl({ path })
+    getUrl({
+      path,
+      options: {
+        validateObjectExistence: true,
+      },
+    })
       .then((result) => {
         if (isMounted) setImageUrl(result.url.href);
       })
