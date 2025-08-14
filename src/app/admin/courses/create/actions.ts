@@ -1,10 +1,10 @@
 "use server"
 
 import { cookiesClient } from "@/utils/amplify-utils";
-import { courseSchema, courseSchemaType } from "@/lib/zodSchemas";
+import { courseSchema, CourseSchemaType } from "@/lib/zodSchemas";
 import { ApiResponse } from "@/lib/types";
 
-export async function createCourseAction(values: courseSchemaType): Promise<ApiResponse> {
+export async function createCourseAction(values: CourseSchemaType): Promise<ApiResponse> {
     try {
         const validation = courseSchema.safeParse(values);
         if (!validation.success) {
@@ -36,15 +36,3 @@ export async function createCourseAction(values: courseSchemaType): Promise<ApiR
         };
     }
 }
-
-// export async function getCoursesAction(): Promise<ApiResponse> {
-//     try {
-//         const {data: courses} = await cookiesClient.models.Course.list();
-        
-//     } catch {
-//         return {
-//             status: "error",
-//             message: "Failed to retrieve courses"
-//         };
-//     }
-// }

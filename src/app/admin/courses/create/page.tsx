@@ -12,7 +12,7 @@ import {
   courseCategories,
   courseLevels,
   courseSchema,
-  courseSchemaType,
+  CourseSchemaType,
   courseStatus,
 } from "@/lib/zodSchemas";
 import { ArrowLeft, Loader2, PlusIcon, SparkleIcon } from "lucide-react";
@@ -38,17 +38,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/rich-text-editor/Editor";
-import CustomFileUploader from "@/components/FileUploader";
 import { createCourseAction } from "./actions";
 import { useTransition } from "react";
 import { tryCatch } from "@/hooks/try-catch";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Uploader } from "@/components/file-uploader/Uploader";
 
 export default function CourseCreatePage() {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
-  const form = useForm<courseSchemaType>({
+  const form = useForm<CourseSchemaType>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: "",
@@ -64,7 +64,7 @@ export default function CourseCreatePage() {
     },
   });
 
-  async function onSubmit(values: courseSchemaType) {
+  async function onSubmit(values: CourseSchemaType) {
     startTransition(async () => {
       const { data: result, error } = await tryCatch(
         createCourseAction(values)
@@ -127,7 +127,7 @@ export default function CourseCreatePage() {
                     <FormItem className="w-full">
                       <FormLabel>Slug</FormLabel>
                       <FormControl>
-                        <Input placeholder="Slug" {...field} />
+                        <Input placeholder="Slug" {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -178,17 +178,11 @@ export default function CourseCreatePage() {
               <FormField
                 control={form.control}
                 name="fileKey"
-                render={() => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Course Thumbnail</FormLabel>
                     <FormControl>
-                      <CustomFileUploader
-                        onUploadSuccess={({ key }) => {
-                          form.setValue("fileKey", key ?? "", {
-                            shouldValidate: true,
-                          });
-                        }}
-                      />
+                      <Uploader onChange={field.onChange} value={field.value} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

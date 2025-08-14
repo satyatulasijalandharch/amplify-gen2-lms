@@ -17,4 +17,4 @@ export const courseSchema = z.object({
     status: z.enum(courseStatus, { message: "Status is required" }),
 })
 
-export type courseSchemaType = z.infer<typeof courseSchema>;
+export type CourseSchemaType = z.infer<typeof courseSchema>;

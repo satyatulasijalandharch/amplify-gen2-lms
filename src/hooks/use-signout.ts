@@ -9,7 +9,7 @@ export function useSignOut() {
 
     const handleSignOut = async function signout() {
         await signOut({ global: true });
-        router.push("/");
+        router.push("/login");
         toast.success("Signed out successfully");
     };
 

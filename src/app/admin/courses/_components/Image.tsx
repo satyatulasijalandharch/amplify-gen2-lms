@@ -44,6 +44,7 @@ const ImageComponent = ({ path, altText, width, height, className }: ImageCompon
 
   return (
     <Image
+      priority={true}
       src={imageUrl}
       alt={altText}
       width={width || 600}

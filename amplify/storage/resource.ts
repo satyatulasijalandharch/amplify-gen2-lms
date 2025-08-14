@@ -3,14 +3,15 @@ import { defineStorage } from '@aws-amplify/backend';
 export const storage = defineStorage({
     name: 'demoLMS',
     access: (allow) => ({
-        'profile-pictures/*': [
+        'media/profile-pictures/*': [
             allow.guest.to(['read']),
-            allow.entity('identity').to(['read', 'write', 'delete'])
+            allow.authenticated.to(['read']),
+            allow.groups(['ADMIN']).to(['read', 'write', 'delete'])
         ],
-        'thumbnail-image/*': [
-            allow.authenticated.to(['read', 'write']),
-            allow.guest.to(['read']),
-            allow.entity('identity').to(['read', 'write', 'delete'])
-        ]
+        'media/thumbnail-image/*': [
+            allow.guest.to(['get']),
+            allow.authenticated.to(['read']),
+            allow.groups(['ADMIN']).to(['read', 'write', 'delete'])
+        ],
     })
 });

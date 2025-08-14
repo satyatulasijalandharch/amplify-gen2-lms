@@ -8,17 +8,14 @@ const schema = a.schema({
     name: a.string(),
     email: a.email(),
     image: a.string(),
-    courses: a.hasMany('Course', 'id'),
   }).identifier(['id'])
     .authorization(allow => [allow.ownerDefinedIn('id')]),
-
 
   // Course model
   Course: a.model({
     id: a.id().authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
-      allow.ownerDefinedIn('id')
     ]),
     title: a.string(),
     description: a.string(),
@@ -30,13 +27,12 @@ const schema = a.schema({
     smallDescription: a.string(),
     slug: a.string(),
     status: a.ref("CourseStatus"),
-    users: a.belongsTo('UserProfile', 'id'),
 
   }).identifier(['id'])
     .authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
-      allow.ownerDefinedIn('id')
+      allow.groups(['ADMIN'])
     ]),
 
   CourseStatus: a.enum(['Draft', 'Published', 'Archived']),
