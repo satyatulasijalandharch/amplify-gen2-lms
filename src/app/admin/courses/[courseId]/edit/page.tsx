@@ -1,3 +1,5 @@
+// "use server";
+
 import { adminGetCourse } from "@/app/data/admin/admin-get-course";
 import {
   Card,
@@ -8,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditCourseForm } from "./_components/EditCourseForm";
+import { CourseStructure } from "./_components/CourseStructure";
 
 type Params = Promise<{ courseId: string }>;
 
@@ -39,7 +42,20 @@ export default async function EditRoute({ params }: { params: Params }) {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="course-structure"></TabsContent>
+        <TabsContent value="course-structure">
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Structure</CardTitle>
+              <CardDescription>
+                Here you can manage the structure of your course, including
+                lessons and modules.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CourseStructure data={data} />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

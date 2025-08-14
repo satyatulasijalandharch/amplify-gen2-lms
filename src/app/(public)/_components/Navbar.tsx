@@ -25,7 +25,7 @@ const navigationItems = [
 ];
 
 export function Navbar() {
-  const user = useAuthUser();
+  const { user, isPending } = useAuthUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-[backdrop-filter]:bg-background/60">
@@ -49,7 +49,7 @@ export function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            { user ? (
+            {isPending ? null : user ? (
               <UserDropdown
                 name={
                   user?.name && user?.name.length > 0

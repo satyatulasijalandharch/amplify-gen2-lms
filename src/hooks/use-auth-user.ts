@@ -17,25 +17,35 @@ type AuthUser = {
 
 export default function useAuthUser() {
     const [user, setUser] = useState<AuthUser>();
+    const [isPending, setIsPending] = useState(true);
 
     useEffect(() => {
         async function getUser() {
-            const session = await fetchAuthSession();
-            if (!session.tokens) {
-                return;
+            setIsPending(true);
+            try {
+                const session = await fetchAuthSession();
+                if (!session.tokens) {
+                    setUser(undefined);
+                    setIsPending(false);
+                    return;
+                }
+                const user = {
+                    ...(await getCurrentUser()),
+                    ...(await fetchUserAttributes()),
+                    isAdmin: false,
+                };
+                const groups = session.tokens.accessToken.payload["cognito:groups"];
+                user.isAdmin = Array.isArray(groups) && groups.includes("Admins");
+                setUser(user);
+            } catch {
+                setUser(undefined);
+            } finally {
+                setIsPending(false);
             }
-            const user = {
-                ...(await getCurrentUser()),
-                ...(await fetchUserAttributes()),
-                isAdmin: false,
-            };
-            const groups = session.tokens.accessToken.payload["cognito:groups"];
-            user.isAdmin = Array.isArray(groups) && groups.includes("Admins");
-            setUser(user);
         }
 
         getUser();
     }, []);
 
-    return user;
+    return { isPending, user };
 }

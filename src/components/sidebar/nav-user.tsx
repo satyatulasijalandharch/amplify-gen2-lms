@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/sidebar";
 import { IconDashboard, IconLogout } from "@tabler/icons-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { useEffect, useState } from "react";
 import useAuthUser from "@/hooks/use-auth-user";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -27,21 +26,14 @@ import { useSignOut } from "@/hooks/use-signout";
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { handleSignOut } = useSignOut();
-  const [isLoading, setIsLoading] = useState(true);
-  const user = useAuthUser();
-
-  useEffect(() => {
-    if (user !== undefined) {
-      setIsLoading(false);
-    }
-  }, [user]);
+  const { user, isPending } = useAuthUser();
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {isLoading ? (
+            {isPending ? (
               <SidebarMenuButton
                 size="lg"
                 className="flex items-center space-x-3 cursor-default"
