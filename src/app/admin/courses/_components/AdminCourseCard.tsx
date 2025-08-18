@@ -62,6 +62,7 @@ export function AdminCourseCard({ data }: AdminCourseCardProps) {
         </DropdownMenu>
       </div>
       <Image
+        priority={true}
         src={thumbnailUrl}
         alt="Thumbnail"
         width={600}
