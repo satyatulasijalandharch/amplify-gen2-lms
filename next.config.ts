@@ -1,14 +1,21 @@
 import type { NextConfig } from "next";
-import output from '@/amplify_outputs.json'
+import outputs from '@/amplify_outputs.json'
 
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    remotePatterns: [{
-      protocol: 'https',
-      hostname: `${output.storage.bucket_name}.s3.${output.storage.aws_region}.amazonaws.com`,
-      pathname: '/**',
-    }],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: new URL(outputs.custom.thumbnailCdnUrl).hostname,
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: `${outputs.storage.bucket_name}.s3.${outputs.storage.aws_region}.amazonaws.com`,
+        pathname: "/**",
+      },
+    ],
   }
 };
 
