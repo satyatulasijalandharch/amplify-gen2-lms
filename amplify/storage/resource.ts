@@ -13,5 +13,10 @@ export const storage = defineStorage({
             allow.authenticated.to(['read']),
             allow.groups(['ADMIN']).to(['read', 'write', 'delete'])
         ],
+        'media/thumbnail-video/*': [
+            allow.guest.to(['get']),
+            allow.authenticated.to(['read']),
+            allow.groups(['ADMIN']).to(['read', 'write', 'delete'])
+        ],
     })
 });
