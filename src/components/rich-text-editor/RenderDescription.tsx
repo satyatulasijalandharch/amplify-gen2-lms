@@ -1,7 +1,5 @@
-"use client";
-
 import { useMemo } from "react";
-import { generateHTML } from "@tiptap/html";
+import { generateHTML } from "@tiptap/html/server";
 import TextAlign from "@tiptap/extension-text-align";
 import { type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
