@@ -24,7 +24,7 @@ const schema = a.schema({
     slug: a.string().required(),
     status: a.enum(['Draft', 'Published', 'Archived']),
     chapters: a.hasMany("Chapter", "courseId"),
-  }),
+  }).secondaryIndexes((index)=> [index("slug")]),
 
   // Chapter model
   Chapter: a.model({
