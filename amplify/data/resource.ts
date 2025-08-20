@@ -4,12 +4,17 @@ import { postConfirmation } from '../auth/post-confirmation/resource';
 const schema = a.schema({
   // UserProfile model
   UserProfile: a.model({
-    id: a.id().required().authorization(allow => [allow.ownerDefinedIn('id').to(['read'])]),
     name: a.string().required(),
     email: a.email().required(),
     image: a.string(),
-  }).identifier(['id'])
-    .authorization(allow => [allow.ownerDefinedIn('id')]),
+    enrollments: a.hasMany("Enrollment", "userId"),
+    stripeCustomerId: a.string(),
+
+  }).authorization(allow => [
+    allow.guest().to(['read']),
+    allow.authenticated().to(['read', "create", "update"]),
+    allow.groups(['ADMIN'])
+  ]),
 
   // Course model
   Course: a.model({
@@ -24,7 +29,14 @@ const schema = a.schema({
     slug: a.string().required(),
     status: a.enum(['Draft', 'Published', 'Archived']),
     chapters: a.hasMany("Chapter", "courseId"),
-  }).secondaryIndexes((index)=> [index("slug")]),
+    enrollments: a.hasMany("Enrollment", "courseId"),
+
+  }).secondaryIndexes((index) => [index("slug")])
+    .authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.groups(['ADMIN'])
+    ]),
 
   // Chapter model
   Chapter: a.model({
@@ -33,7 +45,12 @@ const schema = a.schema({
     courseId: a.id().required(),
     course: a.belongsTo("Course", "courseId"),
     lessons: a.hasMany("Lesson", "chapterId"),
-  }),
+
+  }).authorization(allow => [
+    allow.guest().to(['read']),
+    allow.authenticated().to(['read']),
+    allow.groups(['ADMIN'])
+  ]),
 
   // Lesson model
   Lesson: a.model({
@@ -44,7 +61,28 @@ const schema = a.schema({
     position: a.integer().required(),
     chapterId: a.id().required(),
     chapter: a.belongsTo("Chapter", "chapterId"),
-  }),
+
+  }).authorization(allow => [
+    allow.guest().to(['read']),
+    allow.authenticated().to(['read']),
+    allow.groups(['ADMIN'])
+  ]),
+
+  // Enrollment
+  Enrollment: a.model({
+    amount: a.integer().required(),
+    status: a.enum(['Pending', 'Active', 'Canceled']),
+    courseId: a.id().required(),
+    course: a.belongsTo("Course", "courseId"),
+    userId: a.id().required(),
+    user: a.belongsTo("UserProfile", "userId"),
+
+  }).identifier(['userId', 'courseId']) // Composite Key to uniquely identify enrollments
+    .authorization(allow => [
+      allow.guest().to(["read", "update"]),
+      allow.authenticated().to(["read", "create", "update"]),
+      allow.groups(['ADMIN']),
+    ]),
 
 }).authorization((allow) => [
   allow.resource(postConfirmation),
