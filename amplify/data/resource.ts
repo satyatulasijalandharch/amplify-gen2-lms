@@ -38,6 +38,18 @@ const schema = a.schema({
       allow.groups(['ADMIN'])
     ]),
 
+  getCourseBySlug: a
+    .query()
+    .arguments({
+      slug: a.string().required()
+    })
+    .returns(a.ref("Course"))
+    .authorization(allow => [
+      allow.guest(),
+      allow.authenticated(),
+      allow.groups(['ADMIN'])
+    ]),
+
   // Chapter model
   Chapter: a.model({
     title: a.string().required(),

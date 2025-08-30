@@ -14,7 +14,7 @@ export const { runWithAmplifyServerContext } = createServerRunner({
 export const cookiesClient = generateServerClientUsingCookies<Schema>({
     config: outputs,
     cookies,
-    authMode: "userPool"
+    authMode: "identityPool"
 });
 
 export async function authenticatedUser(context: NextServer.Context) {
